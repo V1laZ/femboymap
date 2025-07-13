@@ -1,0 +1,17 @@
+{
+  "name": "femboymap",
+  "author": "V1laZ",
+  "version": "1.0.0",
+  "description": "Anonymous location sharing platform for the femboy community",
+  "license": "MIT",
+  "scripts": {
+    "dev": "wrangler pages dev ./public",
+    "deploy": "wrangler pages deploy ./public"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4"
+  },
+  "devDependencies": {
+    "wrangler": "^4.24.3"
+  }
+}

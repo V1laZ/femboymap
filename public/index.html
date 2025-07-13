@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FemboyMap is an anonymous community map where femboys can share their location.">
+    <title>FemboyMap</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #2d0036;
+            color: #f8e1f4;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: rgba(45, 0, 54, 0.95);
+            padding: 20px;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #ff4f9c;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #f8e1f4;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        #map {
+            height: 70vh;
+            min-height: 400px;
+            margin: 20px;
+            border-radius: 15px;
+            border: 3px solid rgba(255, 79, 156, 0.3);
+        }
+
+        .controls {
+            background: rgba(45, 0, 54, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .btn {
+            background: #ff4f9c;
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            background: #ff6bb5;
+        }
+
+        .btn:disabled {
+            background: #6d2a4d;
+            color: #bfa2b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            left: auto;
+            transform: none;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+        .toast {
+            min-width: 220px;
+            max-width: 90vw;
+            margin: 8px 0;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+            opacity: 0;
+            transform: translateY(-20px) scale(0.98);
+            transition: opacity 0.25s, transform 0.25s;
+            pointer-events: auto;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        .toast.success {
+            background: #3d0036;
+            color: #ffb3d6;
+            border: 1px solid #ff4f9c;
+        }
+        .toast.error {
+            background: #8d1457;
+            color: #fff;
+            border: 1px solid #ff4f9c;
+        }
+        .toast.info {
+            background: #2d0036;
+            color: #ffb3d6;
+            border: 1px solid #ff4f9c;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+            
+            .controls {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            #map {
+                margin: 10px;
+                height: 60vh;
+            }
+        }
+
+        .footer {
+            font-size: 0.8rem;
+            text-align: center;
+            color: #f8e1f4;
+            margin: 20px;
+        }
+
+        .custom-marker {
+            background: #ff4f9c;
+            border: 3px solid #fff;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FemboyMap 💖🗺️</h1>
+        <p>An anonymous community map where femboys can share their location</p>
+    </div>
+
+    <div class="controls">
+        <button id="addMarkerBtn" class="btn">📍 Add My Location</button>
+        <button id="removeMarkerBtn" class="btn">🗑️ Remove My Marker</button>
+        <button id="refreshBtn" class="btn">🔄 Refresh Map</button>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div id="map"></div>
+
+    <div class="footer">
+        <p style="font-size: 0.6rem; color: #bfa2b8; margin-bottom: 8px;">For privacy protection, IP addresses are stored as salted SHA-256 hashes in our database. 
+        This ensures your anonymity while preventing duplicate markers from the same user.</p>
+        <p>
+            Made with ♥️ for the femboy community!
+        </p>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map', {
+            maxBounds: [[-90, -180], [90, 180]],
+            maxBoundsViscosity: 1.0,
+            minZoom: 3
+        }).setView([40.7128, -74.0060], 3);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        let allMarkers = [];
+        let userMarker = null;
+        let isAddingMarker = false;
+
+        const addMarkerBtn = document.getElementById('addMarkerBtn');
+        const removeMarkerBtn = document.getElementById('removeMarkerBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+
+        const customIcon = L.divIcon({
+            className: 'custom-marker',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        function showStatus(message, type) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3500);
+        }
+
+        async function loadMarkers() {
+            try {
+                const response = await fetch('/api/markers');
+                if (response.ok) {
+                    const markers = await response.json();
+                    
+                    allMarkers.forEach(marker => map.removeLayer(marker));
+                    allMarkers = [];
+                    
+                    markers.forEach(markerData => {
+                        const marker = L.marker([markerData.latitude, markerData.longitude], {
+                            icon: customIcon
+                        }).addTo(map);
+                        
+                        marker.bindPopup('A femboy is here! 💖');
+                        allMarkers.push(marker);
+                    });
+                    
+                    showStatus(`Loaded ${markers.length} markers`, 'success');
+                } else {
+                    throw new Error('Failed to load markers');
+                }
+            } catch (error) {
+                console.error('Error loading markers:', error);
+                showStatus('Failed to load markers. Please try again later.', 'error');
+            }
+        }
+
+        async function addMarker(lat, lng) {
+            try {
+                const response = await fetch('/api/markers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        latitude: lat,
+                        longitude: lng
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showStatus('Your marker has been added! 💖', 'success');
+                    await loadMarkers(); 
+                    removeMarkerBtn.disabled = false;
+                } else {
+                    throw new Error(result.error || 'Failed to add marker');
+                }
+            } catch (error) {
+                console.error('Error adding marker:', error);
+                showStatus(error.message, 'error');
+            }
+        }
+
+        async function removeMarker() {
+            try {
+                const response = await fetch('/api/markers', {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showStatus('Your marker has been removed', 'info');
+                    await loadMarkers();
+                    removeMarkerBtn.disabled = true;
+                } else {
+                    throw new Error(result.error || 'Failed to remove marker');
+                }
+            } catch (error) {
+                console.error('Error removing marker:', error);
+                showStatus(error.message, 'error');
+            }
+        }
+
+        async function checkUserMarker() {
+            try {
+                const response = await fetch('/api/user-marker');
+                if (response.ok) {
+                    const result = await response.json();
+                    removeMarkerBtn.disabled = !result.hasMarker;
+                }
+            } catch (error) {
+                console.error('Error checking user marker:', error);
+            }
+        }
+
+        addMarkerBtn.addEventListener('click', () => {
+            if (isAddingMarker) {
+                isAddingMarker = false;
+                addMarkerBtn.textContent = '📍 Add My Location';
+                showStatus('Click mode cancelled', 'info');
+                return;
+            }
+            
+            isAddingMarker = true;
+            addMarkerBtn.textContent = '❌ Cancel Adding';
+            showStatus('Click anywhere on the map to add your marker', 'info');
+        });
+
+        removeMarkerBtn.addEventListener('click', removeMarker);
+        refreshBtn.addEventListener('click', loadMarkers);
+
+        map.on('click', async (e) => {
+            if (isAddingMarker) {
+                isAddingMarker = false;
+                addMarkerBtn.textContent = '📍 Add My Location';
+                await addMarker(e.latlng.lat, e.latlng.lng);
+            }
+        });
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    map.setView([lat, lng], 10);
+                },
+                (error) => {
+                    console.log('Geolocation not available or denied');
+                }
+            );
+        }
+
+        loadMarkers();
+        checkUserMarker();
+    </script>
+</body>
+</html>
