@@ -9,7 +9,7 @@ FemboyMap is a collaborative map web application that allows users to add their 
 - `migrations/` — SQL migration files for D1 database
 - `wrangler.jsonc` — Wrangler configuration for Cloudflare Pages and D1
 
-## Local Development Setup
+## Development Setup
 1. **Install dependencies:**
    ```sh
    npm install
@@ -33,22 +33,6 @@ FemboyMap is a collaborative map web application that allows users to add their 
    ```
    This will serve your site locally with the D1 database available to API routes.
 
-## Deploying to Cloudflare Pages
-
-### Production Deploy
-To deploy the latest code to production:
-```sh
-npx wrangler pages deploy ./public
-```
-This will update your production site.
-
-### Preview Deploy
-To deploy a preview build (does not affect production):
-```sh
-npx wrangler pages deploy ./public --branch preview
-```
-This will create a preview deployment with a unique URL.
-
 ## Environment Variables
 For local development Cloudflare environment variables can be defined in **.dev.vars**:
 ```
@@ -70,6 +54,22 @@ Please refer to Cloudflare docs on how to setup **Wrangler** to your liking. I'v
   ```sh
   npx wrangler d1 migrations apply femboymap-db
   ```
+
+## Deploying to Cloudflare Pages
+
+### Production Deploy
+To deploy the latest code to production:
+```sh
+npx wrangler pages deploy ./public
+```
+This will update your production site.
+
+### Preview Deploy
+To deploy a preview build (does not affect production):
+```sh
+npx wrangler pages deploy ./public --branch preview
+```
+This will create a preview deployment with a unique URL.
 
 ## License
 MIT License.
