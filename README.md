@@ -2,6 +2,8 @@
 
 FemboyMap is a collaborative map web application that allows users to add their own markers anonymously. It is built using Cloudflare Pages, D1 (Cloudflare's SQLite-compatible database), and JavaScript API routes for backend logic.
 
+The site is hosted on https://femboymap.com/
+
 
 ## Project Structure
 - `public/` — Static served frontend files
