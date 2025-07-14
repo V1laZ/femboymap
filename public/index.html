@@ -13,6 +13,8 @@
     <link rel="manifest" href="/site.webmanifest">
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <style>
         * {
             margin: 0;
@@ -167,6 +169,44 @@
             border: 3px solid #fff;
             border-radius: 50%;
         }
+
+        .marker-cluster-small,
+        .marker-cluster-medium,
+        .marker-cluster-large {
+            background-color: rgba(255, 79, 156, 0.9);
+            border: 3px solid #fff;
+            box-shadow: 0 4px 12px rgba(255, 79, 156, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 100%;
+        }
+
+        .marker-cluster-small div,
+        .marker-cluster-medium div,
+        .marker-cluster-large div {
+            background-color: transparent;
+            color: #fff;
+            font-weight: bold;
+            font-size: 12px;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .marker-cluster-small {
+            width: 30px !important;
+            height: 30px !important;
+        }
+
+        .marker-cluster-medium {
+            width: 40px !important;
+            height: 40px !important;
+        }
+
+        .marker-cluster-large {
+            width: 50px !important;
+            height: 50px !important;
+        }
     </style>
 </head>
 <body>
@@ -194,6 +234,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script>
         const map = L.map('map', {
             maxBounds: [[-90, -180], [90, 180]],
@@ -204,6 +245,19 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
+
+        let markerClusterGroup = L.markerClusterGroup({
+            chunkedLoading: true,
+            chunkProgress: function(processed, total) {
+                if (processed === total) {
+                    console.log('Finished loading', total, 'markers');
+                }
+            },
+            maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
 
         let allMarkers = [];
         let userMarker = null;
@@ -244,17 +298,25 @@
                 if (response.ok) {
                     const markers = await response.json();
                     
-                    allMarkers.forEach(marker => map.removeLayer(marker));
+                    markerClusterGroup.clearLayers();
                     allMarkers = [];
                     
+                    const markerArray = [];
                     markers.forEach(markerData => {
                         const marker = L.marker([markerData.latitude, markerData.longitude], {
                             icon: customIcon
-                        }).addTo(map);
+                        });
                         
                         marker.bindPopup('A femboy is here! 💖');
+                        markerArray.push(marker);
                         allMarkers.push(marker);
                     });
+                    
+                    markerClusterGroup.addLayers(markerArray);
+                    
+                    if (!map.hasLayer(markerClusterGroup)) {
+                        map.addLayer(markerClusterGroup);
+                    }
                     
                     showStatus(`Loaded ${markers.length} markers`, 'success');
                 } else {
