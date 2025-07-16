@@ -54,7 +54,7 @@ Please refer to Cloudflare docs on how to setup **Wrangler** to your liking. I'v
 - Place migration files in `migrations/`.
 - Apply migrations with:
   ```sh
-  npx wrangler d1 migrations apply femboymap-db
+  npx wrangler d1 migrations apply <YOUR_DATABASE_NAME>
   ```
 
 ## Deploying to Cloudflare Pages
