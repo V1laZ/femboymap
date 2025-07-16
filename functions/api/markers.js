@@ -12,12 +12,12 @@ async function hashIP(ip, salt) {
 // GET /api/markers - Get all markers
 export async function onRequestGet(context) {
     const { env } = context;
-    
+
     try {
         const { results } = await env.DB.prepare(
-            "SELECT latitude, longitude FROM markers"
+            "SELECT id, latitude, longitude FROM markers"
         ).all();
-        
+
         return new Response(JSON.stringify(results), {
             headers: {
                 'Content-Type': 'application/json',
@@ -41,11 +41,11 @@ export async function onRequestGet(context) {
 // POST /api/markers - Add a new marker
 export async function onRequestPost(context) {
     const { request, env } = context;
-    
+
     try {
         const body = await request.json();
         const { latitude, longitude } = body;
-        
+
         if (!latitude || !longitude) {
             return new Response(JSON.stringify({ error: 'Latitude and longitude are required' }), {
                 status: 400,
@@ -55,7 +55,7 @@ export async function onRequestPost(context) {
                 },
             });
         }
-        
+
         if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
             return new Response(JSON.stringify({ error: 'Invalid coordinates' }), {
                 status: 400,
@@ -65,19 +65,33 @@ export async function onRequestPost(context) {
                 },
             });
         }
-        
-        const clientIP = request.headers.get('CF-Connecting-IP') || 
-                        request.headers.get('X-Forwarded-For') || 
-                        request.headers.get('X-Real-IP') || 
-                        'unknown';
-        
+
+        const clientIP = request.headers.get('CF-Connecting-IP') ||
+            request.headers.get('X-Forwarded-For') ||
+            request.headers.get('X-Real-IP') ||
+            'unknown';
+
         const salt = env.IP_HASH_SALT;
         const ipHash = await hashIP(clientIP, salt);
-        
+
+        const bannedIP = await env.DB.prepare(
+            "SELECT id FROM banned_ips WHERE ip_hash = ?"
+        ).bind(ipHash).first();
+
+        if (bannedIP) {
+            return new Response(JSON.stringify({ error: 'You are not allowed to place markers on this map.' }), {
+                status: 403,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                },
+            });
+        }
+
         const existing = await env.DB.prepare(
             "SELECT id FROM markers WHERE ip_hash = ?"
         ).bind(ipHash).first();
-        
+
         if (existing) {
             return new Response(JSON.stringify({ error: 'You already have a marker on the map. Remove it first to add a new one.' }), {
                 status: 409,
@@ -87,11 +101,11 @@ export async function onRequestPost(context) {
                 },
             });
         }
-        
+
         await env.DB.prepare(
             "INSERT INTO markers (ip_hash, latitude, longitude) VALUES (?, ?, ?)"
         ).bind(ipHash, latitude, longitude).run();
-        
+
         return new Response(JSON.stringify({ success: true, message: 'Marker added successfully' }), {
             status: 201,
             headers: {
@@ -114,20 +128,20 @@ export async function onRequestPost(context) {
 // DELETE /api/markers - Remove user's marker
 export async function onRequestDelete(context) {
     const { request, env } = context;
-    
+
     try {
-        const clientIP = request.headers.get('CF-Connecting-IP') || 
-                        request.headers.get('X-Forwarded-For') || 
-                        request.headers.get('X-Real-IP') || 
-                        'unknown';
-        
+        const clientIP = request.headers.get('CF-Connecting-IP') ||
+            request.headers.get('X-Forwarded-For') ||
+            request.headers.get('X-Real-IP') ||
+            'unknown';
+
         const salt = env.IP_HASH_SALT;
         const ipHash = await hashIP(clientIP, salt);
-        
+
         const result = await env.DB.prepare(
             "DELETE FROM markers WHERE ip_hash = ?"
         ).bind(ipHash).run();
-        
+
         if (result.changes === 0) {
             return new Response(JSON.stringify({ error: 'No marker found to remove' }), {
                 status: 404,
@@ -137,7 +151,7 @@ export async function onRequestDelete(context) {
                 },
             });
         }
-        
+
         return new Response(JSON.stringify({ success: true, message: 'Marker removed successfully' }), {
             headers: {
                 'Content-Type': 'application/json',

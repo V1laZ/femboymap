@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS banned_ips (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ip_hash TEXT NOT NULL UNIQUE,
+    banned_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_banned_ips_hash ON banned_ips(ip_hash);

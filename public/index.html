@@ -307,7 +307,14 @@
                             icon: customIcon
                         });
                         
-                        marker.bindPopup('A femboy is here! 💖');
+                        const popupContent = `
+                            <div>
+                                A femboy is here! 💖
+                                <!-- Marker ID: ${markerData.id} -->
+                            </div>
+                        `;
+                        
+                        marker.bindPopup(popupContent);
                         markerArray.push(marker);
                         allMarkers.push(marker);
                     });
