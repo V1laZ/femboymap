@@ -1,7 +1,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "femboymap",
-  "pages_build_output_dir": "./public",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-08-03",
+  "compatibility_flags": [
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": "./public"
+  },
+  "observability": {
+    "enabled": true
+  },
   "d1_databases": [
     {
       "binding": "DB",
@@ -9,15 +19,4 @@
       "database_id": "<YOUR_D1_DATABASE_ID>"
     }
   ],
-  "env": {
-    "preview": {
-      "d1_databases": [
-        {
-          "binding": "DB",
-          "database_name": "<YOUR_D1_DATABASE_NAME>",
-          "database_id": "<YOUR_D1_DATABASE_ID>"
-        }
-      ]
-    }
-  }
 }
