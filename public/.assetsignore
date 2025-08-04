@@ -1,0 +1,10 @@
+**/node_modules
+**/.DS_Store
+**/.git
+**/package.json
+**/wrangler.jsonc
+**/wrangler-example.jsonc
+**/LICENSE
+**/package-lock.json
+**/.dev.vars
+**/README.md
