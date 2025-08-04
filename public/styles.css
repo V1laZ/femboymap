@@ -9,6 +9,9 @@ body {
   background: #2d0036;
   color: #f8e1f4;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .header {
@@ -112,6 +115,7 @@ body {
   text-align: center;
   color: #f8e1f4;
   margin: 20px;
+  margin-top: auto;
 }
 
 .privacy-link {
