@@ -1,15 +1,19 @@
 # FemboyMap
 
-FemboyMap is a collaborative map web application that allows users to add their own markers anonymously. It is built using Cloudflare Pages, D1 (Cloudflare's SQLite-compatible database), and JavaScript API routes for backend logic.
+FemboyMap is a community map web application that displays markers shared by the femboy community. It is built using Cloudflare Workers and D1 (Cloudflare's SQLite-compatible database).
 
 The site is hosted on https://femboymap.com/
 
-
 ## Project Structure
-- `public/` — Static served frontend files
-- `functions/api/` — API routes
+- `public/` — Static frontend files
+  - `index.html` — Main map page
+  - `styles.css` — Application styling
+  - `script.js` — Map functionality
+  - `privacy.html` — Privacy policy page
+- `worker/`
+  - `index.js` — Cloudflare Worker backend
 - `migrations/` — SQL migration files for D1 database
-- `wrangler.jsonc` — Wrangler configuration for Cloudflare Pages and D1
+- `wrangler.jsonc` — Wrangler configuration for Cloudflare Workers and D1
 
 ## Development Setup
 1. **Install dependencies:**
@@ -31,9 +35,9 @@ The site is hosted on https://femboymap.com/
      ```
 3. **Start the development server:**
    ```sh
-   npx wrangler pages dev ./public
+   npx wrangler dev
    ```
-   This will serve your site locally with the D1 database available to API routes.
+   This will serve your worker locally with the D1 database available.
 
 ## Environment Variables
 For local development Cloudflare environment variables can be defined in **.dev.vars**:
@@ -57,21 +61,24 @@ Please refer to Cloudflare docs on how to setup **Wrangler** to your liking. I'v
   npx wrangler d1 migrations apply <YOUR_DATABASE_NAME>
   ```
 
-## Deploying to Cloudflare Pages
+## Deploying to Cloudflare Workers
 
 ### Production Deploy
 To deploy the latest code to production:
 ```sh
-npx wrangler pages deploy ./public
+npx wrangler deploy
 ```
-This will update your production site.
+This will update your production worker.
 
-### Preview Deploy
-To deploy a preview build (does not affect production):
+### Development Deploy
+To test your worker before production:
 ```sh
-npx wrangler pages deploy ./public --branch preview
+npx wrangler dev
 ```
-This will create a preview deployment with a unique URL.
+This will run the worker locally for testing.
+
+## Contact
+For data removal requests or questions about the privacy policy, contact: dhpene3h9@mozmail.com
 
 ## License
 MIT License.
